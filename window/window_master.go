@@ -76,6 +76,7 @@ func Window_master() {
 
 			// Agrega aquí la lógica para guardar el nuevo usuario en la base de datos
 			query.Load_user(db, name, last_name)
+
 		}),
 
 		title_update_user,
@@ -127,30 +128,3 @@ func Window_master() {
 	myWindow_master.SetFullScreen(true)
 	myWindow_master.ShowAndRun()
 }
-
-/*
-func showClientInputDialog(parent fyne.Window) string {
-	var name string
-
-	nameInput := widget.NewEntry()
-	nameInput.SetPlaceHolder("Client Name")
-
-	clientInputDialog := &fyne.Container{
-		Objects: []fyne.CanvasObject{
-			widget.NewLabel("Enter the client information:"),
-			nameInput,
-			widget.NewButton("Enter", func() {
-				name = nameInput.Text
-				parent.Close() // Cerrar el cuadro de diálogo después de hacer clic en "Enter"
-			}),
-		},
-	}
-
-	clientInputDialog.Show()
-
-	// Ejecutar el bucle de la aplicación Fyne hasta que se cierre el cuadro de diálogo
-	app.New().Run()
-
-	return name
-}
-*/
