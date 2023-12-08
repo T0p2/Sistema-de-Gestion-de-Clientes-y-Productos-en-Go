@@ -14,13 +14,8 @@ func Prueba_con_bd() *sql.DB {
 	// Abrir la conexión a la base de datos (creará un archivo de base de datos SQLite en el directorio actual)
 	db, err := sql.Open("sqlite3", "./clientes_productos.db")
 	if err != nil {
-		print("es aca")
 		log.Fatal(err)
 	}
-
-	//es una funcion que para cuando se termine de ejecutar el Main o la func
-	//se cierra la base de datos, es lo que hace 'defer'
-	//defer db.Close()
 
 	//tiramos un ping a la base de datos si existe.
 	call := db.Ping()
@@ -54,8 +49,6 @@ func Prueba_con_bd() *sql.DB {
 		fmt.Print("eu")
 		log.Fatal(err)
 	}
-
-	//console.Talk(db)
 
 	return db
 

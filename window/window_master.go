@@ -14,7 +14,8 @@ import (
 )
 
 var myWindow_master fyne.Window
-var myApp fyne.App
+
+//var myApp fyne.App
 var db *sql.DB
 
 func Window_master() {
@@ -25,6 +26,8 @@ func Window_master() {
 
 	loadDataAndShow()
 	myWindow_master.ShowAndRun()
+
+	defer db.Close()
 
 }
 
@@ -43,8 +46,8 @@ func loadDataAndShow() {
 
 	var clientWidgets []fyne.CanvasObject
 	for _, row := range data_client {
-		clientID, clientName := row[0], row[1]
-		label := widget.NewLabel(fmt.Sprintf("Client ID: %s, Name: %s", clientID, clientName))
+		clientID, clientName, idProduct := row[0], row[1], row[2]
+		label := widget.NewLabel(fmt.Sprintf("Client ID: %s, Name: %s, id producto: %s", clientID, clientName, idProduct))
 		clientWidgets = append(clientWidgets, label)
 	}
 

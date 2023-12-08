@@ -35,56 +35,54 @@ func Update_user(db *sql.DB, oldName string, newName string, newLastName string)
 	}
 }
 
-func New_product_user(db *sql.DB, id_producto int, name string) {
+func New_product_user(db *sql.DB, idProducto int, name string) {
+
+	//inicio de transaccion, es un metodo que se asegura que todas las operaciones se cumplan o fallen todas.
+	//lo implemento ya que sino la base de datos recibe muchas instrucciones SQL a la vez, y se desborda.
+
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer tx.Commit()
 
 	// Verificar si el nombre del cliente ya existe en la tabla de clientes
-	rowsName, err := db.Query("SELECT nombre FROM clientes WHERE nombre = ?", name)
+	rowsName, err := tx.Query("SELECT nombre FROM clientes WHERE nombre = ?", name)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 	defer rowsName.Close()
 
-	var nombreFromDB string
-	if rowsName.Next() {
-		if err := rowsName.Scan(&nombreFromDB); err != nil {
-			log.Fatal(err)
-			return
-		}
-	} else {
-		fmt.Println("Error: El nombre del cliente no existe en la tabla de clientes.")
+	if !rowsName.Next() {
+		fmt.Print("Error: El nombre del cliente no existe en la tabla de clientes.")
 		return
 	}
 
-	// Aca verificamos el tema del producto
-	rows, err := db.Query("SELECT idProducto FROM productos WHERE idProducto = ?", id_producto)
+	// Verificar si el idProducto existe en la tabla de productos
+	rows, err := tx.Query("SELECT idProducto FROM productos WHERE idProducto = ?", idProducto)
 	if err != nil {
-		fmt.Print("aquui")
 		log.Fatal(err)
 		return
 	}
 	defer rows.Close()
 
-	var idProductoFromDB int
-	if rows.Next() {
-		if err := rows.Scan(&idProductoFromDB); err != nil {
-			log.Fatal(err)
-			return
-		}
-	} else {
-		fmt.Println("Error: El id_producto no existe en la tabla de productos.")
+	if !rows.Next() {
+		fmt.Println("Error: El idProducto no existe en la tabla de productos.")
 		return
 	}
 
-	//aca hacemos la actualizacion
-	_, err1 := db.Exec("UPDATE clientes SET IdProducto = ? WHERE nombre = ?", id_producto, name)
-	if err1 != nil {
-		fmt.Print("No existe el nombre o id")
-		log.Fatal(err1)
-	} else {
-		fmt.Print("Insertado correctamente.")
+	// Realizar la actualización en la tabla de clientes
+	_, err = tx.Exec("UPDATE clientes SET idProducto = ? WHERE nombre = ?", idProducto, name)
+	if err != nil {
+		fmt.Println("Error al actualizar cliente:", err)
+		return
 	}
+
+	fmt.Println("Producto asignado correctamente al cliente.")
 }
+
 func Load_product(db *sql.DB, name string, description string) {
 
 	_, err := db.Exec("INSERT INTO productos (nombre, descripcion) VALUES (?, ?)", name, description)
@@ -92,7 +90,7 @@ func Load_product(db *sql.DB, name string, description string) {
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		fmt.Print("Se ah cargado correctamente")
+		fmt.Print("Se ha cargado correctamente")
 	}
 }
 
@@ -123,6 +121,7 @@ func Return_id_product(db *sql.DB) [][]string {
 	if err != nil {
 		fmt.Print("NO HAY PRODUCTOS ERROR")
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var idProducto int
@@ -145,7 +144,7 @@ func Return_id_product(db *sql.DB) [][]string {
 func Return_id_client(db *sql.DB) [][]string {
 	var list [][]string
 
-	rows, err := db.Query("SELECT idCliente, nombre FROM clientes")
+	rows, err := db.Query("SELECT idCliente, nombre, IdProducto FROM clientes")
 	if err != nil {
 		fmt.Println("Error al ejecutar la consulta:", err)
 		return list
@@ -155,22 +154,32 @@ func Return_id_client(db *sql.DB) [][]string {
 	for rows.Next() {
 		var idCliente int
 		var nombre sql.NullString
+		var idProducto sql.NullInt16
 
-		err := rows.Scan(&idCliente, &nombre)
+		err := rows.Scan(&idCliente, &nombre, &idProducto)
 		if err != nil {
 			fmt.Println("Error al escanear la fila:", err)
-			continue
+			return list
+		}
+
+		//No soporta manejar nulos en caso de que el cliente no tenga productos, entonces los verificamos.
+		var idProductoValid int
+		if idProducto.Valid {
+			idProductoValid = int(idProducto.Int16)
+		} else {
+			idProductoValid = -1
 		}
 
 		var nombreValue string
 		if nombre.Valid {
 			nombreValue = nombre.String
 		} else {
-			nombreValue = "N/A" // o cualquier valor predeterminado que desees para NULL
+			nombreValue = "NULL"
 		}
 
-		rowData := []string{fmt.Sprint(idCliente), nombreValue}
+		rowData := []string{fmt.Sprint(idCliente), nombreValue, fmt.Sprint(idProductoValid)}
 		list = append(list, rowData)
+
 	}
 
 	return list
