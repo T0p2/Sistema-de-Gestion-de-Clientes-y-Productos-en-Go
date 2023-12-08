@@ -103,15 +103,22 @@ func loadDataAndShow() {
 		input_new_user_name,
 		input_new_user_last_name,
 		widget.NewButton("Save", func() {
+			var up bool
 			// Acción para guardar nuevo usuario
 			name := input_new_user_name.Text
 			last_name := input_new_user_last_name.Text
 
-			// Agrega aquí la lógica para guardar el nuevo usuario en la base de datos
-			query.Load_user(db, name, last_name)
+			if up {
+				// Agrega aquí la lógica para guardar el nuevo usuario en la base de datos
+				query.Load_user(db, name, last_name)
 
-			//aplicamos recursion para recargar la pagina a la hora de tocar el boton
-			loadDataAndShow()
+				// Aplicamos recursión para recargar la página al tocar el botón
+				loadDataAndShow()
+			} else {
+				fmt.Println("El cliente ya existe en la base de datos.")
+				// Puedes manejar este caso de existencia de cliente como desees
+			}
+
 		}),
 
 		title_update_user,
@@ -148,12 +155,21 @@ func loadDataAndShow() {
 		input_new_product_name,
 		input_new_product_description,
 		widget.NewButton("Save", func() {
+			var up bool
 			name := input_new_product_name.Text
 			descripcion := input_new_product_description.Text
 
-			query.Load_product(db, name, descripcion)
+			if up {
+				// Agrega aquí la lógica para guardar el nuevo usuario en la base de datos
+				query.Load_product(db, name, descripcion)
 
-			loadDataAndShow()
+				// Aplicamos recursión para recargar la página al tocar el botón
+				loadDataAndShow()
+			} else {
+				fmt.Println("El cliente ya existe en la base de datos.")
+				// Puedes manejar este caso de existencia de cliente como desees
+			}
+
 		}),
 
 		title_delete_product,

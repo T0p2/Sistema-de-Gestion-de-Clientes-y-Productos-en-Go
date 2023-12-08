@@ -184,3 +184,43 @@ func Return_id_client(db *sql.DB) [][]string {
 
 	return list
 }
+
+func CheckProduct(db *sql.DB, productName string) (bool, error) {
+	// Realizar la consulta para verificar si el nombre del producto ya existe
+	rows, err := db.Query("SELECT COUNT(*) FROM productos WHERE nombre = ?", productName)
+	if err != nil {
+		return false, nil
+	}
+	defer rows.Close()
+
+	// Leer el resultado de la consulta
+	var count int
+	if rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			return false, nil
+		}
+	}
+
+	// Si count es mayor que 0, el nombre del producto ya existe
+	return count > 0, nil
+}
+
+func CheckClient(db *sql.DB, clientName string) (bool, error) {
+	// Realizar la consulta para verificar si el nombre del producto ya existe
+	rows, err := db.Query("SELECT COUNT(*) FROM clientes WHERE nombre = ?", clientName)
+	if err != nil {
+		return false, nil
+	}
+	defer rows.Close()
+
+	// Leer el resultado de la consulta
+	var count int
+	if rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			return false, nil
+		}
+	}
+
+	// Si count es mayor que 0, el nombre del producto ya existe
+	return count > 0, nil
+}
