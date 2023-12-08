@@ -146,23 +146,30 @@ func Return_id_client(db *sql.DB) [][]string {
 	var list [][]string
 
 	rows, err := db.Query("SELECT idCliente, nombre FROM clientes")
-
 	if err != nil {
-		fmt.Print("NO HAY PRODUCTOS ERROR")
+		fmt.Println("Error al ejecutar la consulta:", err)
+		return list
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var idCliente int
-		var nombre string
+		var nombre sql.NullString
 
 		err := rows.Scan(&idCliente, &nombre)
 		if err != nil {
-			// Manejar el error de escaneo
 			fmt.Println("Error al escanear la fila:", err)
+			continue
 		}
 
-		// Crear una nueva lista para cada fila y agregarla a la lista principal
-		rowData := []string{fmt.Sprint(idCliente), nombre}
+		var nombreValue string
+		if nombre.Valid {
+			nombreValue = nombre.String
+		} else {
+			nombreValue = "N/A" // o cualquier valor predeterminado que desees para NULL
+		}
+
+		rowData := []string{fmt.Sprint(idCliente), nombreValue}
 		list = append(list, rowData)
 	}
 

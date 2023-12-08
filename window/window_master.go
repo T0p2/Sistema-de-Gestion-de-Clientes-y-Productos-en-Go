@@ -1,6 +1,7 @@
 package window
 
 import (
+	"database/sql"
 	"fmt"
 	database "main/modules/DataBase"
 	query "main/modules/querys"
@@ -12,32 +13,42 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+var myWindow_master fyne.Window
+var myApp fyne.App
+var db *sql.DB
+
 func Window_master() {
-	fmt.Print("Hola mundo")
-
-	db := database.Prueba_con_bd()
-
-	var data_p = query.Return_id_product(db)
-	var data_c = query.Return_id_client(db)
-
 	myApp := app.New()
-	myWindow_master := myApp.NewWindow("Window Master")
+	myWindow_master = myApp.NewWindow("Window Master")
 
+	db = database.Prueba_con_bd()
+
+	loadDataAndShow()
+	myWindow_master.ShowAndRun()
+
+}
+
+func loadDataAndShow() {
+
+	data_product := query.Return_id_product(db)
+	data_client := query.Return_id_client(db)
+
+	//creacion de listas que muestran los clientes y productos
 	var productWidgets []fyne.CanvasObject
-
-	for _, row := range data_p {
+	for _, row := range data_product {
 		productID, productName := row[0], row[1]
 		label := widget.NewLabel(fmt.Sprintf("Product ID: %s, Name: %s", productID, productName))
 		productWidgets = append(productWidgets, label)
 	}
 
-	var clientWidget []fyne.CanvasObject
-
-	for _, row := range data_c {
+	var clientWidgets []fyne.CanvasObject
+	for _, row := range data_client {
 		clientID, clientName := row[0], row[1]
 		label := widget.NewLabel(fmt.Sprintf("Client ID: %s, Name: %s", clientID, clientName))
-		clientWidget = append(clientWidget, label)
+		clientWidgets = append(clientWidgets, label)
 	}
+
+	/* CREACION DE LOS LABELS, CUADROS DE TEXTO O BOTONES*/
 
 	title_new_user := widget.NewLabel("Alta de cliente")
 	input_new_user_name := widget.NewEntry()
@@ -57,6 +68,22 @@ func Window_master() {
 	input_delete_user_name := widget.NewEntry()
 	input_delete_user_name.SetPlaceHolder("Name")
 
+	title_new_product_ := widget.NewLabel("Alta de producto")
+	input_new_product_name := widget.NewEntry()
+	input_new_product_name.SetPlaceHolder("Product Name")
+	input_new_product_description := widget.NewEntry()
+	input_new_product_description.SetPlaceHolder("Description")
+	/*
+		title_update_product := widget.NewLabel("Actualizar Producto")
+		input_update_old_product_name := widget.NewEntry()
+		input_update_old_product_name.SetPlaceHolder("Old Product Name")
+		input_update_new_product_name := widget.NewEntry()
+		input_update_new_product_name.SetPlaceHolder("New Product Name")
+	*/
+	title_delete_product := widget.NewLabel("Eliminar Producto")
+	input_delete_product_name := widget.NewEntry()
+	input_delete_product_name.SetPlaceHolder("Product Name")
+
 	title_product_user := widget.NewLabel("Carga de prodcuto a cliente, se necesita el nombre o id y el id del producto")
 	title_new_product := widget.NewLabel("Agregar Producto a Cliente")
 	input_new_product := widget.NewEntry()
@@ -65,10 +92,13 @@ func Window_master() {
 	input_user_product := widget.NewEntry()
 	input_user_product.SetPlaceHolder("name")
 
+	// ACA EMPIEZA LA CREACION DEL CONTENT, QUE SERIA EL QUE ALMACENA
+	//TODO LOS WIDGETS
+
 	content := container.NewVBox(
 		title_new_user,
 		input_new_user_name,
-		input_new_user_last_name, // Nuevo campo Last Name
+		input_new_user_last_name,
 		widget.NewButton("Save", func() {
 			// Acción para guardar nuevo usuario
 			name := input_new_user_name.Text
@@ -77,6 +107,8 @@ func Window_master() {
 			// Agrega aquí la lógica para guardar el nuevo usuario en la base de datos
 			query.Load_user(db, name, last_name)
 
+			//aplicamos recursion para recargar la pagina a la hora de tocar el boton
+			loadDataAndShow()
 		}),
 
 		title_update_user,
@@ -91,6 +123,9 @@ func Window_master() {
 
 			// Agrega aquí la lógica para actualizar el usuario en la base de datos
 			query.Update_user(db, oldName, newName, newLastName)
+
+			//aplicamos recursion para recargar la pagina a la hora de tocar el boton
+			loadDataAndShow()
 		}),
 
 		title_delete_user,
@@ -101,6 +136,31 @@ func Window_master() {
 
 			// Agrega aquí la lógica para eliminar el usuario de la base de datos
 			query.Delete_user(db, userNameToDelete)
+
+			//aplicamos recursion para recargar la pagina a la hora de tocar el boton
+			loadDataAndShow()
+		}),
+
+		title_new_product_,
+		input_new_product_name,
+		input_new_product_description,
+		widget.NewButton("Save", func() {
+			name := input_new_product_name.Text
+			descripcion := input_new_product_description.Text
+
+			query.Load_product(db, name, descripcion)
+
+			loadDataAndShow()
+		}),
+
+		title_delete_product,
+		input_delete_product_name,
+		widget.NewButton("Delete", func() {
+			name := input_delete_product_name.Text
+
+			query.Delete_product(db, name)
+
+			loadDataAndShow()
 		}),
 
 		title_product_user,
@@ -118,13 +178,22 @@ func Window_master() {
 			name := input_user_product.Text
 
 			query.New_product_user(db, idProduct, name)
+
+			//aplicamos recursion para recargar la pagina a la hora de tocar el boton
+			loadDataAndShow()
 		}),
 
+		/*widget.NewButton("Refresh", func() {
+			//aplicamos recursion para recargar la pagina a la hora de tocar el boton
+			loadDataAndShow()
+		}),*/
+
+		//agregamos las listas para mostrar los clientes y productos
 		container.NewHBox(productWidgets...),
-		container.NewHBox(clientWidget...),
+		container.NewHBox(clientWidgets...),
 	)
 
-	myWindow_master.SetContent(content)
 	myWindow_master.SetFullScreen(true)
-	myWindow_master.ShowAndRun()
+	myWindow_master.SetContent(content)
+
 }
