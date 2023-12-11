@@ -17,8 +17,8 @@ func Load_user(db *sql.DB, name string, last_name string) {
 	}
 }
 
-func Delete_user(db *sql.DB, name string) {
-	_, err := db.Exec("DELETE FROM clientes WHERE nombre = ?", name)
+func Delete_user(db *sql.DB, name string, lastName string) {
+	_, err := db.Exec("DELETE FROM clientes WHERE nombre = ? AND apellido = ?", name, lastName)
 	if err != nil {
 		log.Fatal(err)
 	} else {
@@ -26,8 +26,8 @@ func Delete_user(db *sql.DB, name string) {
 	}
 }
 
-func Update_user(db *sql.DB, oldName string, newName string, newLastName string) {
-	_, err := db.Exec("UPDATE clientes SET nombre = ?, apellido = ? WHERE nombre = ?", newName, newLastName, oldName)
+func Update_user(db *sql.DB, oldName string, newName string, LastName string) {
+	_, err := db.Exec("UPDATE clientes SET nombre = ? WHERE nombre = ? AND apellido = ?", newName, oldName, LastName)
 	if err != nil {
 		log.Fatal(err)
 	} else {
@@ -35,7 +35,7 @@ func Update_user(db *sql.DB, oldName string, newName string, newLastName string)
 	}
 }
 
-func New_product_user(db *sql.DB, idProducto int, name string) {
+func New_product_user(db *sql.DB, idProducto int, name string, last_name string) {
 
 	//inicio de transaccion, es un metodo que se asegura que todas las operaciones se cumplan o fallen todas.
 	//lo implemento ya que sino la base de datos recibe muchas instrucciones SQL a la vez, y se desborda.
@@ -48,7 +48,7 @@ func New_product_user(db *sql.DB, idProducto int, name string) {
 	defer tx.Commit()
 
 	// Verificar si el nombre del cliente ya existe en la tabla de clientes
-	rowsName, err := tx.Query("SELECT nombre FROM clientes WHERE nombre = ?", name)
+	rowsName, err := tx.Query("SELECT nombre FROM clientes WHERE nombre = ? AND apellido = ?", name, last_name)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -74,7 +74,7 @@ func New_product_user(db *sql.DB, idProducto int, name string) {
 	}
 
 	// Realizar la actualización en la tabla de clientes
-	_, err = tx.Exec("UPDATE clientes SET idProducto = ? WHERE nombre = ?", idProducto, name)
+	_, err = tx.Exec("UPDATE clientes SET idProducto = ? WHERE nombre = ? AND apellido = ?", idProducto, name, last_name)
 	if err != nil {
 		fmt.Println("Error al actualizar cliente:", err)
 		return
@@ -114,7 +114,6 @@ func Update_product(db *sql.DB, oldName string, newName string, description stri
 
 func Return_id_product(db *sql.DB) [][]string {
 	var list [][]string
-	//var idProducto int
 
 	rows, err := db.Query("SELECT idProducto, nombre FROM productos")
 
@@ -205,9 +204,9 @@ func CheckProduct(db *sql.DB, productName string) (bool, error) {
 	return count > 0, nil
 }
 
-func CheckClient(db *sql.DB, clientName string) (bool, error) {
+func CheckClient(db *sql.DB, clientName string, clientLastName string) (bool, error) {
 	// Realizar la consulta para verificar si el nombre del producto ya existe
-	rows, err := db.Query("SELECT COUNT(*) FROM clientes WHERE nombre = ?", clientName)
+	rows, err := db.Query("SELECT COUNT(*) FROM clientes WHERE nombre = ? AND apellido = ?", clientName, clientLastName)
 	if err != nil {
 		return false, nil
 	}
@@ -220,7 +219,6 @@ func CheckClient(db *sql.DB, clientName string) (bool, error) {
 			return false, nil
 		}
 	}
-
 	// Si count es mayor que 0, el nombre del producto ya existe
 	return count > 0, nil
 }
