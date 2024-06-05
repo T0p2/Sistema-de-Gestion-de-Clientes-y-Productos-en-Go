@@ -1,4 +1,4 @@
-Este proyecto es un sistema de gestión de clientes y productos desarrollado en Go. Está diseñado para manejar operaciones CRUD (Crear, Leer, Actualizar, Eliminar) en una base de datos SQLite. El objetivo es proporcionar una solución sencilla y eficiente para gestionar datos en aplicaciones comerciales.
+Este proyecto es un sistema de gestión de clientes y productos desarrollado en Go, especialmente desarollado para un proyectos universitario. Está diseñado para manejar operaciones CRUD (Crear, Leer, Actualizar, Eliminar) en una base de datos SQLite. El objetivo es proporcionar una solución sencilla y eficiente para gestionar datos en aplicaciones comerciales.
 
 Características
 CRUD para Clientes y Productos: Permite la creación, lectura, actualización y eliminación de registros.
